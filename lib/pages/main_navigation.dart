@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:belajar_flutter/pages/feed_page.dart';
-// import 'package:belajar_flutter/pages/profile_page.dart';
-// import 'package:belajar_flutter/pages/search_page.dart';
+import 'package:belajar_flutter/pages/profile_page.dart';
+import 'package:belajar_flutter/pages/search_page.dart';
 
 
 class MainNavigation extends StatefulWidget {
@@ -16,8 +16,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _pages = const [
     FeedPage(),
-    // SearchPage(),
-    // ProfilePage(),
+    SearchPage(),
+    ProfilePage(),
   ];
  
   @override
