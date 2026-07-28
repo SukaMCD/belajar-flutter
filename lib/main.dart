@@ -1,3 +1,4 @@
+import 'package:belajar_flutter/pages/main_navigation.dart';
 import 'package:flutter/material.dart';
 import 'pages/feed_page.dart';
 
@@ -21,7 +22,7 @@ class VibeMusicApp extends StatelessWidget {
           surface: Color(0xFF151922),
         ),
       ),
-      home: const FeedPage(),
+      home: const MainNavigation(),
     );
   }
 }
