@@ -1,7 +1,16 @@
+import 'package:belajar_flutter/models/song_model.dart';
+import 'package:belajar_flutter/pages/favorite_page.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final List<Song> favoriteSongs;
+  final void Function(Song)? onFavoriteToggle;
+
+  const ProfilePage({
+    super.key,
+    required this.favoriteSongs,
+    required this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,17 +53,30 @@ class ProfilePage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('12', 'Liked'),
+                  _buildStatItem('${favoriteSongs.length}', 'Liked'),
                   Container(width: 1, height: 24, color: Colors.white10),
                   _buildStatItem('24h', 'Streamed'),
                   Container(width: 1, height: 24, color: Colors.white10),
                   _buildStatItem('5', 'Playlist'),
-                  Container(width: 1, height: 24, color: Colors.white10),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            _buildMenuItem(Icons.favorite_rounded, 'Favorite Song'),
+            _buildMenuItem(
+              Icons.favorite_rounded,
+              'Favorite Song',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FavoritePage(
+                      favoriteSongs: favoriteSongs,
+                      onFavoriteToggle: onFavoriteToggle,
+                    ),
+                  ),
+                );
+              },
+            ),
             _buildMenuItem(Icons.history_rounded, 'Recently Played'),
             _buildMenuItem(Icons.storage_rounded, 'Clear Cache Data'),
             _buildMenuItem(Icons.settings_rounded, 'Settings'),
@@ -82,7 +104,7 @@ Widget _buildStatItem(String value, String label) {
   );
 }
 
-Widget _buildMenuItem(IconData icon, String title) {
+Widget _buildMenuItem(IconData icon, String title, {VoidCallback? onTap}) {
   return Container(
     margin: const EdgeInsets.only(bottom: 10),
     decoration: BoxDecoration(
@@ -101,7 +123,7 @@ Widget _buildMenuItem(IconData icon, String title) {
         size: 14,
         color: Colors.grey,
       ),
-      onTap: () {},
+      onTap: onTap,
     ),
   );
 }

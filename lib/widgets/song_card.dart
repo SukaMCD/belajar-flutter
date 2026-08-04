@@ -5,8 +5,15 @@ import 'animated_like_button.dart';
 
 class SongCard extends StatelessWidget {
   final Song song;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteToggle;
 
-  const SongCard({super.key, required this.song});
+  const SongCard({
+    super.key,
+    required this.song, 
+    this.isFavorite = false,
+    this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +119,10 @@ class SongCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const AnimatedLikeButton(),
+                  AnimatedLikeButton(
+                    isLiked: isFavorite,
+                    onTap: onFavoriteToggle,
+                  ),
                 ],
               ),
             ),
