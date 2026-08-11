@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:belajar_flutter/pages/main_navigation.dart';
 import 'package:flutter/material.dart';
 
 
@@ -51,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const FeedPage(),
+            pageBuilder: (_, __, ___) => const MainNavigation(),
             transitionsBuilder: (_, animation, __, child) {
               return FadeTransition(opacity: animation, child: child);
             },
