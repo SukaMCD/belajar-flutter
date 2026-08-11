@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:belajar_flutter/models/song_model.dart';
+import 'package:belajar_flutter/providers/favorite_provider.dart';
 import 'package:belajar_flutter/widgets/song_card.dart';
 
 class FavoritePage extends StatelessWidget {
-  final List<Song> favoriteSongs;
-  final void Function(Song)? onFavoriteToggle;
+  final List<Song> allSongs;
 
   const FavoritePage({
     super.key,
-    required this.favoriteSongs,
-    this.onFavoriteToggle,
+    required this.allSongs,
   });
-
-
 
   @override
   Widget build(BuildContext context) {
+    final favProvider = context.watch<FavoriteProvider>();
+
+    final favoriteSongs = allSongs
+        .where((song) => favProvider.isFavorite(song.id))
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -26,7 +30,6 @@ class FavoritePage extends StatelessWidget {
         ),
       ),
       body: favoriteSongs.isEmpty
-
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -44,7 +47,6 @@ class FavoritePage extends StatelessWidget {
                 ],
               ),
             )
-
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: favoriteSongs.length,
@@ -52,11 +54,8 @@ class FavoritePage extends StatelessWidget {
                 final song = favoriteSongs[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: SongCard(
-                    song: song,
-                    isFavorite: true,
-                    onFavoriteToggle: () => onFavoriteToggle?.call(song),
-                  ),
+
+                  child: SongCard(song: song),
                 );
               },
             ),
