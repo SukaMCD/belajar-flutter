@@ -1,11 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song_model.dart';
 
 class DetailPage extends StatefulWidget {
   final Song song;
+  final List<Song>? playlist;
 
-  const DetailPage({super.key, required this.song});
+  const DetailPage({
+    super.key,
+    required this.song,
+    this.playlist,
+  });
 
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -13,31 +19,81 @@ class DetailPage extends StatefulWidget {
 
 class _DetailPageState extends State<DetailPage> {
   late AudioPlayer _audioPlayer;
+  late List<Song> _playlist;
+  late int _currentIndex;
+  StreamSubscription<PlayerState>? _playerStateSubscription;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _initAudio();
+    _playlist = widget.playlist ?? sampleSongs;
+    _currentIndex = _playlist.indexWhere((s) => s.id == widget.song.id);
+    if (_currentIndex == -1) {
+      _playlist = [widget.song];
+      _currentIndex = 0;
+    }
+
+    _loadAndPlaySong();
+
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        _playNextSong();
+      }
+    });
   }
 
-  Future<void> _initAudio() async {
+  Future<void> _loadAndPlaySong() async {
     try {
-      await _audioPlayer.setUrl(widget.song.audioUrl);
+      final currentSong = _playlist[_currentIndex];
+      final url = currentSong.audioUrl;
+      await _audioPlayer.stop();
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        await _audioPlayer.setUrl(url);
+      } else {
+        await _audioPlayer.setAsset(url);
+      }
       _audioPlayer.play();
     } catch (e) {
       debugPrint("Error loading audio: $e");
     }
   }
 
+  void _playNextSong() {
+    if (_playlist.isEmpty) return;
+    setState(() {
+      if (_currentIndex < _playlist.length - 1) {
+        _currentIndex++;
+      } else {
+        _currentIndex = 0;
+      }
+    });
+    _loadAndPlaySong();
+  }
+
+  void _playPreviousSong() {
+    if (_playlist.isEmpty) return;
+    setState(() {
+      if (_currentIndex > 0) {
+        _currentIndex--;
+      } else {
+        _currentIndex = _playlist.length - 1;
+      }
+    });
+    _loadAndPlaySong();
+  }
+
   @override
   void dispose() {
+    _playerStateSubscription?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentSong = _playlist[_currentIndex];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -52,7 +108,7 @@ class _DetailPageState extends State<DetailPage> {
             const SizedBox(height: 10),
 
             Hero(
-              tag: 'cover_${widget.song.id}',
+              tag: 'cover_${currentSong.id}',
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
@@ -67,7 +123,7 @@ class _DetailPageState extends State<DetailPage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Image.network(
-                    widget.song.coverUrl,
+                    currentSong.coverUrl,
                     height: 300,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -78,12 +134,12 @@ class _DetailPageState extends State<DetailPage> {
             const SizedBox(height: 30),
 
             Text(
-              widget.song.title,
+              currentSong.title,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
-              widget.song.artist,
+              currentSong.artist,
               style: TextStyle(fontSize: 15, color: Colors.grey[400]),
             ),
             const Spacer(),
@@ -146,7 +202,7 @@ class _DetailPageState extends State<DetailPage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.skip_previous_rounded, size: 36),
-                  onPressed: () {},
+                  onPressed: _playPreviousSong,
                 ),
                 const SizedBox(width: 20),
 
@@ -198,7 +254,7 @@ class _DetailPageState extends State<DetailPage> {
                 const SizedBox(width: 20),
                 IconButton(
                   icon: const Icon(Icons.skip_next_rounded, size: 36),
-                  onPressed: () {},
+                  onPressed: _playNextSong,
                 ),
               ],
             ),

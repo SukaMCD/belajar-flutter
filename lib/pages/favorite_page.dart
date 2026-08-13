@@ -54,8 +54,10 @@ class FavoritePage extends StatelessWidget {
                 final song = favoriteSongs[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-
-                  child: SongCard(song: song),
+                  child: SongCard(
+                    song: song,
+                    playlist: favoriteSongs,
+                  ),
                 );
               },
             ),

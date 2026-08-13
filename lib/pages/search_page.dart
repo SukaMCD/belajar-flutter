@@ -65,7 +65,7 @@ class _SearchPageState extends State<SearchPage> {
                       : ListView.builder(
                           itemCount: results.length,
                           itemBuilder: (context, index) =>
-                              SongCard(song: results[index]),
+                              SongCard(song: results[index], playlist: results),
                         ),
             ),
           ],
