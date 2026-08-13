@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import '../models/song_model.dart';
 
-class DetailPage extends StatelessWidget {
+class DetailPage extends StatefulWidget {
   final Song song;
 
   const DetailPage({super.key, required this.song});
+
+  @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
+  late AudioPlayer _audioPlayer;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _audioPlayer.setUrl(widget.song.audioUrl);
+      _audioPlayer.play();
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +52,7 @@ class DetailPage extends StatelessWidget {
             const SizedBox(height: 10),
 
             Hero(
-              tag: 'cover_${song.id}',
+              tag: 'cover_${widget.song.id}',
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
@@ -37,7 +67,7 @@ class DetailPage extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Image.network(
-                    song.coverUrl,
+                    widget.song.coverUrl,
                     height: 300,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -46,23 +76,71 @@ class DetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
+
             Text(
-              song.title,
+              widget.song.title,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
-              song.artist,
+              widget.song.artist,
               style: TextStyle(fontSize: 15, color: Colors.grey[400]),
             ),
             const Spacer(),
 
-            Slider(
-              value: 0.35,
-              activeColor: const Color(0xFF6366F1),
-              inactiveColor: Colors.white10,
-              onChanged: (v) {},
+            StreamBuilder<Duration>(
+              stream: _audioPlayer.positionStream,
+              builder: (context, snapshot) {
+                final position = snapshot.data ?? Duration.zero;
+                final duration = _audioPlayer.duration ?? Duration.zero;
+
+                return Column(
+                  children: [
+                    Slider(
+                      value: position.inSeconds.toDouble().clamp(
+                        0.0,
+                        duration.inSeconds.toDouble() > 0
+                            ? duration.inSeconds.toDouble()
+                            : 1.0,
+                      ),
+                      max: duration.inSeconds.toDouble() > 0
+                          ? duration.inSeconds.toDouble()
+                          : 1.0,
+                      activeColor: const Color(0xFF6366F1),
+                      inactiveColor: Colors.white10,
+                      onChanged: (v) {
+                        _audioPlayer.seek(Duration(seconds: v.toInt()));
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            position.toString().split('.').first,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            duration.toString().split('.').first,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
+
+            const SizedBox(height: 10),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -71,18 +149,52 @@ class DetailPage extends StatelessWidget {
                   onPressed: () {},
                 ),
                 const SizedBox(width: 20),
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: const Color(0xFF6366F1),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.play_arrow_rounded,
-                      size: 34,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {},
-                  ),
+
+                // Tombol Play/Pause dengan State
+                StreamBuilder<PlayerState>(
+                  stream: _audioPlayer.playerStateStream,
+                  builder: (context, snapshot) {
+                    final playerState = snapshot.data;
+                    final processingState = playerState?.processingState;
+                    final playing = playerState?.playing;
+
+                    if (processingState == ProcessingState.loading ||
+                        processingState == ProcessingState.buffering) {
+                      return const CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Color(0xFF6366F1),
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    } else if (playing != true) {
+                      return CircleAvatar(
+                        radius: 30,
+                        backgroundColor: const Color(0xFF6366F1),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 34,
+                            color: Colors.white,
+                          ),
+                          onPressed: _audioPlayer.play,
+                        ),
+                      );
+                    } else {
+                      return CircleAvatar(
+                        radius: 30,
+                        backgroundColor: const Color(0xFF6366F1),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.pause_rounded,
+                            size: 34,
+                            color: Colors.white,
+                          ),
+                          onPressed: _audioPlayer.pause,
+                        ),
+                      );
+                    }
+                  },
                 ),
+
                 const SizedBox(width: 20),
                 IconButton(
                   icon: const Icon(Icons.skip_next_rounded, size: 36),
