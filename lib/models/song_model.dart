@@ -27,8 +27,8 @@ class Song {
 final List<Song> sampleSongs = [
   Song(
     id: '1',
-    title: '2112',
-    artist: 'Reality Club',
+    title: 'Midnight Coding Beats',
+    artist: 'Lo-Fi Chill Hop',
     coverUrl: 'https://picsum.photos/id/145/800/600',
     tag: 'Trending',
     audioUrl: 'audio/2112.mp3'
@@ -49,4 +49,14 @@ final List<Song> sampleSongs = [
     tag: 'Relax',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
   ),
+];
+
+final List<String> sampleTags = [
+  'All',
+  'Trending',
+  'Popular',
+  'Relax',
+  'Workout',
+  'Focus',
+  'Chill',
 ];
