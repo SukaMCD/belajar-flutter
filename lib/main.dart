@@ -1,17 +1,23 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:belajar_flutter/providers/favorite_provider.dart';
+import 'package:belajar_flutter/providers/audio_player_provider.dart';
 import 'package:provider/provider.dart';
-import 'providers/favorite_provider.dart';
 import 'pages/splash_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
 
   final favProvider = FavoriteProvider();
   await favProvider.initStorage();
 
   runApp(
-    ChangeNotifierProvider.value(
-      value: favProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: favProvider),
+        ChangeNotifierProvider(create: (context) => AudioPlayerProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -25,7 +31,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Music App',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF0F1118),
+      ),
       home: const SplashScreen(),
     );
   }

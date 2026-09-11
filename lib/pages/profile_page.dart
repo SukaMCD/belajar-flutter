@@ -1,18 +1,88 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:belajar_flutter/models/song_model.dart';
 import 'package:belajar_flutter/pages/favorite_page.dart';
+import 'package:belajar_flutter/pages/login_page.dart';
 import 'package:belajar_flutter/providers/favorite_provider.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ProfilePage extends StatelessWidget {
+
+
+// ubag ke statefull widget
+
+class ProfilePage extends StatefulWidget {
   final List<Song> allSongs;
 
   const ProfilePage({super.key, required this.allSongs});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  // ============================================================
+
+  void _showEditProfileDialog() {
+    final user = FirebaseAuth.instance.currentUser;
+    final nameController = TextEditingController(text: user?.displayName);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Profil'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Nama',
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+        ),
+        actions: [
+          TextButton(
+            // PENTING: pakai ctx (milik dialog), bukan context (milik halaman)
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isEmpty) return;
+
+              // 1. Simpan nama baru ke Firebase Auth
+              await user?.updateDisplayName(newName);
+              // 2. Ambil ulang data user terbaru dari server
+              await user?.reload();
+
+              if (!ctx.mounted) return;
+              Navigator.pop(ctx); // 3. Tutup dialog
+              setState(() {}); //    4. Gambar ulang halaman -> nama baru muncul
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
+ 
+  @override
   Widget build(BuildContext context) {
     final favProvider = context.watch<FavoriteProvider>();
-    final likeCount = favProvider.favoriteIds.length;
+    final likedCount = favProvider.favoriteIds.length;
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -26,102 +96,138 @@ class ProfilePage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           children: [
-            CircleAvatar(
+            const SizedBox(height: 10),
+            const CircleAvatar(
               radius: 48,
-              backgroundColor: const Color(0xFF6366F1),
-              backgroundImage: const AssetImage('lib/assets/aaa.jpg'),
+              backgroundColor: Color(0xFF6366F1),
+              child: Icon(Icons.person_rounded, size: 48, color: Colors.white),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Fabian Rizky Pratama',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
             Text(
-              'Music Enthusiast',
-              style: TextStyle(color: Colors.grey[500], fontSize: 13),
+              currentUser?.displayName ?? 'User Test',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 4),
+            Text(
+              currentUser?.email ?? 'Music Enthusiast',
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
+            ),
+
             const SizedBox(height: 24),
+
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.35),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF151922),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white10),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('$likeCount', 'Liked'),
-                  Container(width: 1, height: 24, color: Colors.white10),
+                  _buildStatItem('$likedCount', 'Liked'),
+                  Container(height: 24, width: 1, color: Colors.white10),
                   _buildStatItem('24h', 'Streamed'),
-                  Container(width: 1, height: 24, color: Colors.white10),
-                  _buildStatItem('5', 'Playlist'),
+                  Container(height: 24, width: 1, color: Colors.white10),
+                  _buildStatItem('3', 'Playlists'),
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
+
             _buildMenuItem(
               Icons.favorite_rounded,
-              'Favorite Song',
+              'Favorite Songs',
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FavoritePage(
-                      allSongs: allSongs,
-                    ),
+                    // [DIUBAH - SESI 2] allSongs -> widget.allSongs
+                    // (karena sekarang kita ada di dalam class State)
+                    builder: (context) => FavoritePage(allSongs: widget.allSongs),
                   ),
                 );
               },
             ),
             _buildMenuItem(Icons.history_rounded, 'Recently Played'),
             _buildMenuItem(Icons.storage_rounded, 'Clear Cache Data'),
+
+            // [BARU - SESI 2] Menu untuk membuka pop-up edit profil
+            _buildMenuItem(
+              Icons.edit_rounded,
+              'Edit Profile',
+              onTap: _showEditProfileDialog,
+            ),
+
             _buildMenuItem(Icons.settings_rounded, 'Settings'),
+
+            const SizedBox(height: 8),
+
+            _buildMenuItem(
+              Icons.logout_rounded,
+              'Logout',
+              isDanger: true,
+              onTap: _logout, // [DIUBAH - SESI 2] tidak perlu kirim context lagi
+            ),
           ],
         ),
       ),
     );
   }
-}
 
-Widget _buildStatItem(String value, String label) {
-  return Column(
-    children: [
-      Text(
-        value,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF6366F1),
+  Widget _buildStatItem(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF6366F1),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem(
+    IconData icon,
+    String title, {
+    VoidCallback? onTap,
+    bool isDanger = false,
+  }) {
+    final iconColor = isDanger ? Colors.redAccent : const Color(0xFF6366F1);
+    final textColor = isDanger ? Colors.redAccent : Colors.white;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151922),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDanger ? Colors.redAccent.withAlpha(50) : Colors.white10,
         ),
       ),
-      const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-    ],
-  );
-}
-
-Widget _buildMenuItem(IconData icon, String title, {VoidCallback? onTap}) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    decoration: BoxDecoration(
-      color: const Color(0xFF151922),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.white10),
-    ),
-    child: ListTile(
-      leading: Icon(icon, color: const Color(0xFF6366F1), size: 22),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      child: ListTile(
+        leading: Icon(icon, color: iconColor, size: 22),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: textColor,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: isDanger ? Colors.redAccent.withAlpha(150) : Colors.grey,
+        ),
+        onTap: onTap,
       ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios_rounded,
-        size: 14,
-        color: Colors.grey,
-      ),
-      onTap: onTap,
-    ),
-  );
+    );
+  }
 }
