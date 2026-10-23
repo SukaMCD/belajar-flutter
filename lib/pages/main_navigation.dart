@@ -27,13 +27,13 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       const FeedPage(),
       const SearchPage(),
       ProfilePage(allSongs: sampleSongs),
     ];
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),

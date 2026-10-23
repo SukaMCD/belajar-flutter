@@ -47,11 +47,37 @@ class _DetailPageState extends State<DetailPage> {
               tag: 'cover_${widget.song.id}',
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
-                child: Image.network(
-                  widget.song.coverUrl,
-                  height: 300,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+                child: Builder(
+                  builder: (context) {
+                    final url = widget.song.coverUrl.trim();
+                    Widget placeholder = Container(
+                      height: 300,
+                      width: double.infinity,
+                      color: const Color(0xFF1E1B4B),
+                      child: const Icon(Icons.music_note_rounded,
+                          size: 64, color: Colors.white54),
+                    );
+
+                    if (url.startsWith('http://') ||
+                        url.startsWith('https://')) {
+                      return Image.network(
+                        url,
+                        height: 300,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => placeholder,
+                      );
+                    } else if (url.isNotEmpty) {
+                      return Image.asset(
+                        url,
+                        height: 300,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => placeholder,
+                      );
+                    }
+                    return placeholder;
+                  },
                 ),
               ),
             ),

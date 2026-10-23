@@ -27,7 +27,7 @@ class SongCard extends StatelessWidget {
         border: Border.all(color: Colors.white10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -53,11 +53,37 @@ class SongCard extends StatelessWidget {
                 children: [ 
                   Hero(
                     tag: 'cover_${song.id}',
-                    child: Image.network(
-                      song.coverUrl,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                    child: Builder(
+                      builder: (context) {
+                        final url = song.coverUrl.trim();
+                        Widget placeholder = Container(
+                          height: 200,
+                          width: double.infinity,
+                          color: const Color(0xFF1E1B4B),
+                          child: const Icon(Icons.music_note_rounded,
+                              size: 48, color: Colors.white54),
+                        );
+
+                        if (url.startsWith('http://') ||
+                            url.startsWith('https://')) {
+                          return Image.network(
+                            url,
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => placeholder,
+                          );
+                        } else if (url.isNotEmpty) {
+                          return Image.asset(
+                            url,
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => placeholder,
+                          );
+                        }
+                        return placeholder;
+                      },
                     ),
                   ),
 
@@ -65,11 +91,11 @@ class SongCard extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.topCenter,
+                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.75),
+                            Colors.black.withValues(alpha: 0.75),
                           ],
                         ),
                       ),
@@ -85,7 +111,7 @@ class SongCard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(color: Colors.white24),
                       ),

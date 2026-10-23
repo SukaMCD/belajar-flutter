@@ -20,7 +20,12 @@ class AudioPlayerProvider extends ChangeNotifier {
 
     try {
       _currentSong = song;
-      await _player.setUrl(song.audioUrl);
+      final url = song.audioUrl.trim();
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        await _player.setUrl(url);
+      } else if (url.isNotEmpty) {
+        await _player.setAsset(url);
+      }
       await _player.play();
       
       // Notify setelah URL di-set dan play dipanggil, agar UI update

@@ -4,10 +4,11 @@ import 'package:belajar_flutter/providers/favorite_provider.dart';
 import 'package:belajar_flutter/providers/audio_player_provider.dart';
 import 'package:provider/provider.dart';
 import 'pages/splash_page.dart';
+import 'package:belajar_flutter/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final favProvider = FavoriteProvider();
   await favProvider.initStorage();
@@ -15,8 +16,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: favProvider),
-        ChangeNotifierProvider(create: (context) => AudioPlayerProvider()),
+        ChangeNotifierProvider<AudioPlayerProvider>(
+          create: (_) => AudioPlayerProvider(),
+        ),
+        ChangeNotifierProvider<FavoriteProvider>.value(value: favProvider),
       ],
       child: const MyApp(),
     ),
