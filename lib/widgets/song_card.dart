@@ -8,11 +8,13 @@ import 'animated_like_button.dart';
 class SongCard extends StatelessWidget {
   final Song song;
   final List<Song>? playlist;
+  final int? initialIndex;
 
   const SongCard({
     super.key,
     required this.song,
     this.playlist,
+    this.initialIndex,
   });
 
   @override
@@ -45,6 +47,7 @@ class SongCard extends StatelessWidget {
                     builder: (context) => DetailPage(
                       song: song,
                       playlist: playlist,
+                      initialIndex: initialIndex,
                     ),
                   ),
                 );
@@ -55,7 +58,7 @@ class SongCard extends StatelessWidget {
                     tag: 'cover_${song.id}',
                     child: Builder(
                       builder: (context) {
-                        final url = song.coverUrl.trim();
+                        final url = song.imageUrl.trim();
                         Widget placeholder = Container(
                           height: 200,
                           width: double.infinity,

@@ -1,88 +1,61 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Song {
   final String id;
   final String title;
   final String artist;
-  final String coverUrl;
-  final String tag;
   final String audioUrl;
-  final String? mediaUrl;
+  final String mediaUrl;
+  final String imageUrl;
+  final String tag;
 
-  Song({
+  const Song({
     required this.id,
     required this.title,
     required this.artist,
-    required this.coverUrl,
+    this.audioUrl = '',
+    this.mediaUrl = '',
+    this.imageUrl = '',
     required this.tag,
-    required this.audioUrl,
-    this.mediaUrl,
   });
 
-  factory Song.fromFirestore(Map<String, dynamic> data, String id) {
+  factory Song.fromFirestore(DocumentSnapshot<Map<String, dynamic>> document) {
+    final data = document.data() ?? {};
+
     return Song(
-      id: id,
-      title: data['title'] as String? ?? 'Untitled',
-      artist: data['artist'] as String? ?? 'Unknown Artist',
-      coverUrl: (data['imageUrl'] ?? data['coverUrl']) as String? ?? '',
-      tag: data['tag'] as String? ?? 'All',
-      audioUrl: data['audioUrl'] as String? ?? '',
-      mediaUrl: data['mediaUrl'] as String?,
+      id: document.id,
+      title: data['title']?.toString() ?? 'Tanpa Judul',
+      artist: data['artist']?.toString() ?? 'Unknown Artist',
+      audioUrl: data['audioUrl']?.toString() ?? '',
+      mediaUrl: data['mediaUrl']?.toString() ?? '',
+      imageUrl: data['imageUrl']?.toString() ?? '',
+      tag: data['tag']?.toString() ?? 'Other',
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toFirestore() {
     return {
       'title': title,
       'artist': artist,
-      'imageUrl': coverUrl,
-      'coverUrl': coverUrl,
-      'tag': tag,
       'audioUrl': audioUrl,
-      if (mediaUrl != null) 'mediaUrl': mediaUrl,
+      'mediaUrl': mediaUrl,
+      'imageUrl': imageUrl,
+      'tag': tag,
     };
   }
 
   @override
   bool operator ==(Object other) =>
-    identical(this, other) || 
-    other is Song && runtimeType == other.runtimeType && id == other.id;
+      identical(this, other) || other is Song && other.id == id;
 
   @override
   int get hashCode => id.hashCode;
 }
 
-final List<Song> sampleSongs = [
-  Song(
-    id: '1',
-    title: 'Midnight Coding Beats',
-    artist: 'Lo-Fi Chill Hop',
-    coverUrl: 'https://picsum.photos/id/145/800/600',
-    tag: 'Trending',
-    audioUrl: 'audio/2112.mp3'
-  ),
-  Song(
-    id: '2',
-    title: 'Cyberpunk Synthwave',
-    artist: 'Neon Vibe Studio',
-    coverUrl: 'https://picsum.photos/id/1067/800/600',
-    tag: 'Popular',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
-  ),
-  Song(
-    id: '3',
-    title: 'Acoustic Coffee Break',
-    artist: 'Indie Chill',
-    coverUrl: 'https://picsum.photos/id/225/800/600',
-    tag: 'Relax',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
-  ),
-];
-
-final List<String> sampleTags = [
+const List<String> categories = [
   'All',
   'Trending',
   'Popular',
   'Relax',
-  'Workout',
-  'Focus',
-  'Chill',
+  'Synthwave',
 ];

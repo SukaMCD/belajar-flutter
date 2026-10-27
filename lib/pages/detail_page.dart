@@ -7,11 +7,13 @@ import '../providers/audio_player_provider.dart';
 class DetailPage extends StatefulWidget {
   final Song song;
   final List<Song>? playlist;
+  final int? initialIndex;
 
   const DetailPage({
     super.key,
     required this.song,
     this.playlist,
+    this.initialIndex,
   });
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -49,7 +51,7 @@ class _DetailPageState extends State<DetailPage> {
                 borderRadius: BorderRadius.circular(24),
                 child: Builder(
                   builder: (context) {
-                    final url = widget.song.coverUrl.trim();
+                    final url = widget.song.imageUrl.trim();
                     Widget placeholder = Container(
                       height: 300,
                       width: double.infinity,
